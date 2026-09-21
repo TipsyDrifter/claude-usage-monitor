@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Claude Usage Monitor 門鈴</title>
+    <style>
+      /* 跟桌面 App 統計／設定視窗同一套 H5 色票（src/statistics/h5.css） */
+      :root {
+        color-scheme: light;
+        --bg: #f8f9fb;
+        --card: #ffffff;
+        --line: #e1e5eb;
+        --line-soft: #eceff4;
+        --ink: #1a1d23;
+        --ink-2: #4b5260;
+        --ink-3: #7b8394;
+        --accent: #4e7ecf;
+        --accent-deep: #2e5fb7;
+        --accent-soft: #e3ebf8;
+        --safe: #2f7d5b;
+        --amber: #d99a2b;
+        --amber-ink: #a06f14;
+        --red: #c13a30;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+        margin: 0;
+        width: 340px;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px 10px;
+        background: var(--card);
+        border-bottom: 1px solid var(--line);
+      }
+      header img { width: 22px; height: 22px; }
+      header h1 { font-size: 13px; font-weight: 600; margin: 0; flex: 1; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+      .dot.on { background: var(--safe); }
+      .dot.warn { background: var(--amber); }
+      main { padding: 12px 14px 14px; display: grid; gap: 10px; }
+      .lede {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 11.5px;
+        border-left: 3px solid var(--accent);
+        padding-left: 8px;
+      }
+      .lede b { color: var(--ink); font-weight: 600; }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: grid;
+        gap: 8px;
+      }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .label { font-weight: 600; font-size: 12px; }
+      .hint { margin: 0; color: var(--ink-3); font-size: 11px; }
+      .hint code { font-family: Consolas, monospace; font-size: 10.5px; color: var(--ink-2); }
+      input[type="text"], input[type="number"] {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Consolas, monospace;
+        font-size: 11px;
+      }
+      input[type="text"]:focus, input[type="number"]:focus {
+        outline: 2px solid var(--accent-soft);
+        border-color: var(--accent);
+      }
+      input[type="number"] { width: 84px; }
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+      .token-row { display: flex; gap: 6px; }
+      .token-row input { flex: 1; }
+      button {
+        border: 0;
+        border-radius: 6px;
+        padding: 7px 10px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: #fff;
+      }
+      button:hover { background: var(--accent-deep); }
+      button.secondary {
+        background: var(--card);
+        color: var(--accent-deep);
+        border: 1px solid var(--line);
+        font-weight: 500;
+        padding: 5px 9px;
+        font-size: 11px;
+      }
+      button.secondary:hover { background: var(--accent-soft); }
+      button.primary { width: 100%; }
+      .status { min-height: 16px; font-size: 11.5px; text-align: center; color: var(--ink-2); }
+      .status.ok { color: var(--safe); }
+      .status.warn { color: var(--amber-ink); }
+      .status.err { color: var(--red); }
+      details summary { cursor: pointer; color: var(--ink-3); font-size: 11px; user-select: none; }
+      details[open] summary { margin-bottom: 6px; }
+      .adv { display: grid; gap: 6px; }
+      .last { color: var(--ink-3); font-size: 11px; }
+      .last b { color: var(--ink-2); font-weight: 500; }
+      footer {
+        padding: 0 14px 12px;
+        color: var(--ink-3);
+        font-size: 10.5px;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon-32.png" alt="" />
+      <h1>Claude Usage Monitor 門鈴</h1>
+      <span class="dot" id="dot" title="門鈴狀態"></span>
+    </header>
+
+    <main>
+      <p class="lede">
+        你在這個瀏覽器對 claude.ai 送出訊息時，這顆擴充會按一下桌面 App 的門鈴，
+        讓它立刻去查一次額度。<b>它只看「有沒有送出請求」，不讀對話內容、不碰 claude.ai。</b>
+      </p>
+
+      <section>
+        <div class="row">
+          <span class="label">啟用門鈴</span>
+          <input type="checkbox" id="enabled" />
+        </div>
+      </section>
+
+      <section>
+        <span class="label">門鈴密碼牌</span>
+        <div class="token-row">
+          <input type="text" id="token" placeholder="從桌面 App 複製過來" autocomplete="off" spellcheck="false" />
+          <button class="secondary" id="paste">貼上</button>
+        </div>
+        <p class="hint">
+          桌面 App → 設定 → 系統 → 「門鈴」區塊 → 按複製。按門鈴要出示密碼牌，別的程式就按不動。
+        </p>
+      </section>
+
+      <section>
+        <button class="primary" id="test">按一次門鈴試試</button>
+        <div class="status" id="status">&nbsp;</div>
+        <div class="last" id="last"></div>
+      </section>
+
+      <details>
+        <summary>進階</summary>
+        <div class="adv">
+          <div class="row">
+            <span class="label">桌面 App 的 port</span>
+            <input type="number" id="port" min="1024" max="65535" />
+          </div>
+          <div class="row">
+            <span class="label">送出後等幾秒再按</span>
+            <input type="number" id="delay" min="0" max="30" step="1" />
+          </div>
+          <p class="hint">
+            預設 <code>17819</code>／<code>3</code> 秒。等一下是為了讓官方把這則訊息的用量記上，太早問會問到舊值。
+          </p>
+        </div>
+      </details>
+    </main>
+
+    <footer>
+      <span id="ver"></span>
+      <span>不上商店 · 開發人員模式載入</span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
