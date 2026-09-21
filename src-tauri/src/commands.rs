@@ -1,0 +1,544 @@
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter, Manager, State};
+
+use crate::scheduler::Scheduler;
+use crate::state::AppState;
+use crate::types::{AppSettings, UsageState};
+
+#[tauri::command]
+pub async fn get_usage_state(state: State<'_, AppState>) -> Result<UsageState, String> {
+    Ok(state.get_usage().await)
+}
+
+#[tauri::command]
+pub async fn get_settings(state: State<'_, AppState>) -> Result<AppSettings, String> {
+    Ok(state.get_settings().await)
+}
+
+#[tauri::command]
+pub async fn save_settings(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    scheduler: State<'_, Arc<Scheduler>>,
+    mut settings: AppSettings,
+) -> Result<(), String> {
+    settings.notifications.normalize();
+    // v1.8.2: the doorbell token is minted and owned by the backend — the
+    // frontend only ever echoes it back. A payload with an empty token means
+    // the caller's copy of settings predates `settings::load` (e.g. the
+    // widget's onMoved position save racing startup) and must not be allowed
+    // to wipe the real one — that silently kills both doorbells (found
+    // 2026-09-20: settings.json on disk had token "" for days).
+    if settings.webhook.token.is_empty() {
+        let state: State<'_, AppState> = app.state();
+        let current = state.get_settings().await;
+        if !current.webhook.token.is_empty() {
+            // v1.8.4: an empty token means the sender never loaded settings — the
+            // rest of its payload is DEFAULT_SETTINGS too (autoStart=false, theme,
+            // thresholds…). Keeping only the token (v1.8.2) still let that save
+            // flip autoStart off and call autostart.disable() on every launch.
+            // Drop the whole save; the position it carried is the one we just
+            // restored anyway.
+            crate::applog::write_log(
+                &app,
+                "settings-early-save-dropped",
+                serde_json::json!({
+                    "window": window.label(),
+                    "autoStart": settings.general.auto_start,
+                    "theme": settings.widget.theme,
+                }),
+            )
+            .await;
+            return Ok(());
+        }
+    }
+    let new_interval = settings.general.poll_interval_minutes;
+    crate::settings::save(&app, &settings)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::settings::apply(&app, settings.clone()).await;
+    scheduler.set_interval(new_interval);
+
+    let _ = app.emit("settings://update", &settings);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn refresh_now(app: AppHandle) -> Result<(), String> {
+    // D54: a human pressing 刷新 IS activity — never blocked by idle pause.
+    crate::collector::refresh_manual(&app)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn show_settings(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("settings") {
+        w.show().map_err(|e| e.to_string())?;
+        let _ = w.set_focus();
+    }
+    Ok(())
+}
+
+/// Open (or focus, if already open) the v0.3 Statistics window. The window
+/// itself is declared statically in `tauri.conf.json` so we don't need to
+/// allocate a WebView at runtime — just flip visibility.
+#[tauri::command]
+pub async fn show_statistics(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("statistics") {
+        w.show().map_err(|e| e.to_string())?;
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+/// Write (or refresh) the Claude Code `Stop` hook in `~/.claude/settings.json`.
+/// Returns the absolute path of the file that was written.
+#[tauri::command]
+pub async fn install_claude_code_hook(app: AppHandle) -> Result<String, String> {
+    let state: State<AppState> = app.state();
+    let settings = state.get_settings().await;
+    let path = crate::hook_installer::install_stop_hook(
+        &app,
+        &settings.webhook.token,
+        settings.webhook.port,
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+/// Mint a fresh webhook bearer token, persist it, and broadcast the update.
+/// After calling this, the caller should also re-run `install_claude_code_hook`
+/// so the new token reaches `~/.claude/settings.json` (and remind the user
+/// to update their browser extension if they're using one).
+#[tauri::command]
+pub async fn regenerate_webhook_token(app: AppHandle) -> Result<String, String> {
+    let new_token = crate::settings::generate_webhook_token();
+    let state: State<AppState> = app.state();
+    let mut s = state.get_settings().await;
+    s.webhook.token = new_token.clone();
+    crate::settings::save(&app, &s)
+        .await
+        .map_err(|e| e.to_string())?;
+    state.set_settings(s.clone()).await;
+    let _ = app.emit("settings://update", &s);
+    log::info!("Webhook token regenerated by user");
+    Ok(new_token)
+}
+
+/// M4: research-layer payload for the 這半年 dashboard page.
+#[tauri::command]
+pub async fn get_dashboard(
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat_account: Option<String>,
+    days: Option<u32>,
+) -> Result<serde_json::Value, String> {
+    ledger
+        .dashboard(seat_account.as_deref(), days.unwrap_or(180))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// M3: decision-layer payload for the「今天會不會撞牆」page.
+#[tauri::command]
+pub async fn get_today_outlook(
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat: Option<String>,
+) -> Result<serde_json::Value, String> {
+    ledger.today_outlook(seat.as_deref()).await.map_err(|e| e.to_string())
+}
+
+/// M2/W5: burn-rate + ETA for the widget's expanded panel.
+#[tauri::command]
+pub async fn get_burn_stats(
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat: Option<String>,
+) -> Result<serde_json::Value, String> {
+    ledger.burn_stats(seat.as_deref()).await.map_err(|e| e.to_string())
+}
+
+/// v1.3 (D75): switcher seat list + which one the CLI is logged into now.
+#[tauri::command]
+pub async fn list_seats(
+    ledger: State<'_, crate::ledger::Ledger>,
+) -> Result<serde_json::Value, String> {
+    ledger.list_seats().await.map_err(|e| e.to_string())
+}
+
+/// v1.3 (D75): last-known 5h / 7d / Fable values of one seat, UsageSnapshot-shaped.
+#[tauri::command]
+pub async fn get_seat_snapshot(
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat_id: String,
+) -> Result<serde_json::Value, String> {
+    ledger.seat_snapshot(&seat_id).await.map_err(|e| e.to_string())
+}
+
+/// M1: everything the 資料健康度 page needs, in one loose-JSON round trip.
+#[tauri::command]
+pub async fn get_data_health(
+    ledger: State<'_, crate::ledger::Ledger>,
+) -> Result<serde_json::Value, String> {
+    ledger.health_snapshot().await.map_err(|e| e.to_string())
+}
+
+/// Open the folder containing collector.log in Explorer.
+#[tauri::command]
+pub async fn reveal_log_folder(app: AppHandle) -> Result<(), String> {
+    let path = crate::applog::log_path(&app)
+        .ok_or_else(|| "Could not resolve log path".to_string())?;
+    // Make sure the file exists so Explorer can highlight it.
+    if !path.exists() {
+        let _ = std::fs::write(&path, b"");
+    }
+    let parent = path
+        .parent()
+        .ok_or_else(|| "log folder has no parent".to_string())?
+        .to_path_buf();
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_path(parent.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
+// ---------------------------------------------------------------------------
+// v1.8.2: diagnostics bundle — one zip a layperson can hand to the developer
+// ---------------------------------------------------------------------------
+
+/// Mask the local part of anything that looks like an e-mail address
+/// (`thomas@example.com` → `t***@example.com`). The log never had one as of
+/// 2026-09-21, but seat labels in the health snapshot do carry them and the
+/// bundle is meant to leave the machine.
+fn redact_emails(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    let is_local = |b: u8| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'%' | b'+' | b'-');
+    let mut last_emit = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'@' {
+            // Walk back over the local part.
+            let mut s = i;
+            while s > last_emit && is_local(bytes[s - 1]) {
+                s -= 1;
+            }
+            // Need at least one local char and a plausible domain after '@'.
+            let domain_ok = bytes.get(i + 1).is_some_and(|b| b.is_ascii_alphanumeric());
+            if s < i && domain_ok {
+                out.push_str(&text[last_emit..s]);
+                out.push_str(&text[s..s + 1]);
+                out.push_str("***");
+                last_emit = i;
+            }
+        }
+        i += 1;
+    }
+    out.push_str(&text[last_emit..]);
+    out
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiagnosticsResult {
+    /// `true` when the user closed the save dialog without picking a place.
+    pub cancelled: bool,
+    pub path: String,
+    pub file_name: String,
+    pub bytes: u64,
+}
+
+/// Zip `collector.log` + redacted `settings.json` + health snapshot + an
+/// `about.txt` into a place the user picks (save dialog, defaults to the
+/// Desktop — the AppData exports folder is too deep for a layperson to find
+/// again) and reveal it. Deliberately NOT included: the ledger databases
+/// (tens of MB, and the evidence export already covers "my numbers"),
+/// transcripts, anything from `~/.claude/` except whether our Stop hook is
+/// installed.
+#[tauri::command]
+pub async fn pack_diagnostics(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    ledger: State<'_, crate::ledger::Ledger>,
+) -> Result<DiagnosticsResult, String> {
+    use std::io::Write as _;
+    use tauri_plugin_dialog::DialogExt as _;
+
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir: {e}"))?;
+
+    let now = chrono::Local::now();
+    let stamp = now.format("%Y%m%d-%H%M%S").to_string();
+    let suggested = format!("diagnostics-{stamp}.zip");
+
+    // Save dialog on a blocking thread (the dialog plugin forbids blocking
+    // on the main thread; tauri commands run on the async pool, and
+    // spawn_blocking keeps the pool free while the user browses).
+    let mut builder = app
+        .dialog()
+        .file()
+        .set_title("儲存診斷包")
+        .set_file_name(&suggested)
+        .add_filter("Zip 壓縮檔", &["zip"]);
+    if let Ok(desktop) = app.path().desktop_dir() {
+        builder = builder.set_directory(desktop);
+    }
+    let picked = tokio::task::spawn_blocking(move || builder.blocking_save_file())
+        .await
+        .map_err(|e| e.to_string())?;
+    let Some(picked) = picked else {
+        return Ok(DiagnosticsResult {
+            cancelled: true,
+            path: String::new(),
+            file_name: String::new(),
+            bytes: 0,
+        });
+    };
+    let mut path = picked.into_path().map_err(|e| e.to_string())?;
+    if path.extension().and_then(|e| e.to_str()) != Some("zip") {
+        path.set_extension("zip");
+    }
+    let file_name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or(suggested);
+
+    // --- gather -----------------------------------------------------------
+    let version = app.package_info().version.to_string();
+
+    let mut settings_json = serde_json::to_value(state.get_settings().await)
+        .map_err(|e| e.to_string())?;
+    if let Some(tok) = settings_json.pointer_mut("/webhook/token") {
+        *tok = serde_json::Value::String("<redacted>".into());
+    }
+    let settings_text = serde_json::to_string_pretty(&settings_json).map_err(|e| e.to_string())?;
+
+    let health_text = match ledger.health_snapshot().await {
+        Ok(v) => serde_json::to_string_pretty(&v).unwrap_or_default(),
+        Err(e) => format!("{{\"error\": {:?}}}", e.to_string()),
+    };
+
+    let log_text = crate::applog::log_path(&app)
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .unwrap_or_else(|| "(collector.log not found)".into());
+
+    let hook_installed = app
+        .path()
+        .home_dir()
+        .ok()
+        .map(|h| h.join(".claude").join("settings.json"))
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|s| s.contains("/refresh"))
+        .unwrap_or(false);
+
+    let size_of = |name: &str| -> String {
+        std::fs::metadata(data_dir.join(name))
+            .map(|m| format!("{} bytes", m.len()))
+            .unwrap_or_else(|_| "(missing)".into())
+    };
+    let os_ver = {
+        use std::os::windows::process::CommandExt as _;
+        std::process::Command::new("cmd")
+            .args(["/c", "ver"])
+            .creation_flags(0x0800_0000) // CREATE_NO_WINDOW
+            .output()
+            .ok()
+            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "(unknown)".into())
+    };
+    let about = format!(
+        "Claude Usage Monitor 診斷包\n\
+         產生時間: {now}\n\
+         App 版本: {version} ({profile})\n\
+         作業系統: {os_ver} / {arch}\n\
+         資料夾: {data_dir}\n\
+         Claude Code Stop hook 已安裝: {hook}\n\
+         \n\
+         檔案大小\n\
+         collector.log: {log}\n\
+         ledger.sqlite: {ledger}\n\
+         history.sqlite: {history}\n\
+         settings.json: {settings}\n",
+        now = now.to_rfc3339(),
+        profile = if cfg!(debug_assertions) { "dev" } else { "release" },
+        arch = std::env::consts::ARCH,
+        data_dir = data_dir.display(),
+        hook = if hook_installed { "是" } else { "否" },
+        log = size_of("collector.log"),
+        ledger = size_of("ledger.sqlite"),
+        history = size_of("history.sqlite"),
+        settings = size_of("settings.json"),
+    );
+    let readme = "這個 zip 是 Claude Usage Monitor 的診斷包，給開發者看「App 為什麼怪怪的」用。\n\
+        \n\
+        裡面有：\n\
+        - about.txt      App 版本、Windows 版本、資料夾位置、檔案大小\n\
+        - collector.log  App 每次採集的過程紀錄（時間、階段、結果）\n\
+        - settings.json  你的設定；門鈴密碼牌已經遮掉\n\
+        - health.json    資料健康度頁的原始數字（樣本數、覆蓋率、缺口）\n\
+        \n\
+        裡面沒有：對話內容、帳本資料庫本身、任何登入憑證。\n\
+        電子郵件已遮成 x***@網域。\n";
+
+    // --- zip ----------------------------------------------------------------
+    let file = std::fs::File::create(&path).map_err(|e| e.to_string())?;
+    let mut zip = zip::ZipWriter::new(file);
+    let opts = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+    let mut put = |name: &str, body: &str| -> Result<(), String> {
+        zip.start_file(name, opts).map_err(|e| e.to_string())?;
+        zip.write_all(body.as_bytes()).map_err(|e| e.to_string())
+    };
+    put("README.txt", readme)?;
+    put("about.txt", &about)?;
+    put("collector.log", &redact_emails(&log_text))?;
+    put("settings.json", &redact_emails(&settings_text))?;
+    put("health.json", &redact_emails(&health_text))?;
+    zip.finish().map_err(|e| e.to_string())?;
+
+    let bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+    crate::applog::write_log(
+        &app,
+        "diagnostics-packed",
+        serde_json::json!({ "file": file_name, "bytes": bytes }),
+    )
+    .await;
+    let _ = reveal_path(&app, &path);
+    Ok(DiagnosticsResult {
+        cancelled: false,
+        path: path.to_string_lossy().to_string(),
+        file_name,
+        bytes,
+    })
+}
+
+#[cfg(test)]
+mod diag_tests {
+    use super::redact_emails;
+
+    #[test]
+    fn masks_local_part_only() {
+        assert_eq!(redact_emails("thomas@example.com"), "t***@example.com");
+        assert_eq!(
+            redact_emails("{\"email\":\"a.b+c@x.io\",\"n\":1}"),
+            "{\"email\":\"a***@x.io\",\"n\":1}"
+        );
+        assert_eq!(redact_emails("no at here"), "no at here");
+        assert_eq!(redact_emails("lonely @ sign"), "lonely @ sign");
+        assert_eq!(redact_emails("two a@b.c and d@e.f"), "two a***@b.c and d***@e.f");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// M6 (D65): history page + evidence export
+// ---------------------------------------------------------------------------
+
+fn exports_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map(|d| d.join("exports"))
+        .map_err(|e| format!("app_data_dir: {e}"))
+}
+
+fn reveal_path(app: &AppHandle, path: &std::path::Path) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .reveal_item_in_dir(path)
+        .map_err(|e| e.to_string())
+}
+
+/// M6 歷史檢視: one local-time span (day/week/month, offset ≤ 0) of
+/// reconstructed windows for a seat. v1.5（D79）：`kind` 選 "5h"／"7d"／
+/// "fable"，沒傳就是 5h。
+#[tauri::command]
+pub async fn get_history(
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat_account: Option<String>,
+    unit: String,
+    offset: i32,
+    kind: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let kind = crate::ledger::HistKind::parse(kind.as_deref().unwrap_or("5h"));
+    ledger
+        .history(seat_account.as_deref(), &unit, offset, kind)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportResult {
+    pub dir: String,
+    pub files: Vec<String>,
+}
+
+/// M6 證據包: JSON + CSV×2 + Markdown into <app data>/exports, then reveal
+/// the first file in Explorer (D65-1: no save dialog, no plugin).
+#[tauri::command]
+pub async fn export_evidence(
+    app: AppHandle,
+    ledger: State<'_, crate::ledger::Ledger>,
+    seat_account: Option<String>,
+    days: Option<u32>,
+) -> Result<ExportResult, String> {
+    let dir = exports_dir(&app)?;
+    let version = app.package_info().version.to_string();
+    let paths = ledger
+        .export_evidence(seat_account.as_deref(), days.unwrap_or(180), &dir, &version)
+        .await
+        .map_err(|e| e.to_string())?;
+    if let Some(first) = paths.first() {
+        let _ = reveal_path(&app, first);
+    }
+    Ok(ExportResult {
+        dir: dir.to_string_lossy().to_string(),
+        files: paths.iter().map(|p| p.to_string_lossy().to_string()).collect(),
+    })
+}
+
+/// M6 圖卡: the UI rasterises its self-contained SVG card to PNG and hands
+/// the bytes over as base64; we only write and reveal. File name is
+/// sanitised to a bare basename.
+#[tauri::command]
+pub async fn save_export_file(
+    app: AppHandle,
+    name: String,
+    base64_data: String,
+) -> Result<String, String> {
+    use base64::Engine as _;
+    let safe: String = name
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+        .collect();
+    if safe.is_empty() || safe.starts_with('.') {
+        return Err("invalid export file name".into());
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(base64_data.as_bytes())
+        .map_err(|e| format!("base64: {e}"))?;
+    let dir = exports_dir(&app)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = dir.join(safe);
+    std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+    let _ = reveal_path(&app, &path);
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn reveal_export_folder(app: AppHandle) -> Result<(), String> {
+    let dir = exports_dir(&app)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_path(dir.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
+}

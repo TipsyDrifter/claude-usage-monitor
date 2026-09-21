@@ -1,0 +1,85 @@
+/* ==========================================================================
+   W4 · 環形儀表（v1.8.1，D82）——移植自 prototypes/theme-T1-compare.html。
+   環的顏色只說狀態：安息態穿灰衣（象牙灰）、留意琥珀、警戒珊瑚＋慢速呼吸弧。
+   ========================================================================== */
+
+.r {
+  position: relative;
+  box-sizing: border-box;
+  font-family: -apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, "Microsoft JhengHei", sans-serif;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  cursor: default;
+}
+.r svg { display: block; overflow: visible; }
+.r.t-dark {
+  background: rgba(21, 23, 29, 0.86);
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.48), 0 2px 8px rgba(0, 0, 0, 0.32);
+  color: #eef0f4;
+}
+.r.t-light {
+  background: rgba(253, 253, 254, 0.86);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 40px rgba(35, 48, 70, 0.22), 0 2px 8px rgba(35, 48, 70, 0.10);
+  color: #1b2027;
+}
+.r.t-dark.s-warn { border-color: rgba(232, 163, 61, 0.35); }
+.r.t-dark.s-crit { border-color: rgba(240, 89, 76, 0.55); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.48), 0 0 26px rgba(240, 89, 76, 0.22); }
+.r.t-light.s-warn { border-color: rgba(185, 119, 5, 0.42); }
+.r.t-light.s-crit { border-color: rgba(220, 58, 68, 0.55); box-shadow: 0 16px 40px rgba(35, 48, 70, 0.22), 0 0 26px rgba(220, 58, 68, 0.28); }
+
+.r .arc { transition: stroke-dasharray 0.6s cubic-bezier(0.22, 0.9, 0.3, 1), stroke 0.3s; }
+.r .pulse { animation: w4-pulse 2.6s ease-in-out infinite; }
+@keyframes w4-pulse { 0%, 100% { opacity: 0.26; } 50% { opacity: 0.85; } }
+
+.r .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px; line-height: 1.2; white-space: nowrap; }
+.r .chip i { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.r .brand { all: unset; cursor: default; font-size: 9px; font-weight: 700; letter-spacing: 0.2em; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+.r .brand[title] { cursor: pointer; }
+.r .brand[title]:hover { opacity: 0.9; }
+.r .ago { margin-left: auto; font-size: 9px; color: #e8a33d; white-space: nowrap; }
+.r .c-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 18px; }
+.r .c-head .chip { margin-left: auto; }
+.r .ago + .chip { margin-left: 0; }
+
+/* 微型條 220×32：左 5h 環＋數字；右兩行（上 7d／F，下重置） */
+.r.w-micro { width: 220px; height: 32px; border-radius: 16px; display: flex; align-items: center; gap: 6px; padding: 0 11px 0 8px; }
+.r .m-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; opacity: 0.45; }
+.r .m-val { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+.r .m-flex { flex: 1; }
+.r .m-val2 { font-size: 10.5px; font-weight: 700; }
+.r .m-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 1px; line-height: 1.1; }
+.r .m-row { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.r .m-row.m-sub { font-size: 9.5px; opacity: 0.55; }
+
+/* 標準卡 280×228：三環並列 */
+.r.w-card { width: 280px; height: 228px; border-radius: 16px; padding: 11px 14px 12px; display: flex; flex-direction: column; }
+.r .c-rings { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px; }
+.r .rcol { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.r .rmeta { font-size: 10px; opacity: 0.55; letter-spacing: 0.02em; white-space: nowrap; }
+
+/* 展開面板 320×336 */
+.r.w-panel { width: 320px; height: 336px; border-radius: 18px; padding: 12px 15px; display: flex; flex-direction: column; }
+.r .p-rings { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; flex: 1; padding: 0 4px; }
+.r .p-hr { height: 1px; margin: 8px 0; background: currentColor; opacity: 0.1; flex: none; }
+.r .stats { display: flex; align-items: stretch; gap: 14px; }
+.r .stat { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.r .slab { font-size: 10px; letter-spacing: 0.08em; font-weight: 700; opacity: 0.45; }
+.r .sval { font-size: 13.5px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.35; white-space: nowrap; }
+.r .sval.txt { white-space: normal; }
+.r .sunit { font-size: 10px; font-weight: 600; margin-left: 1px; opacity: 0.55; }
+.r .ssub { font-size: 10.5px; line-height: 1.4; opacity: 0.45; }
+.r .ssub.amber { opacity: 1; color: #e8a33d; }
+.r .p-vdiv { width: 1px; flex: none; background: currentColor; opacity: 0.1; }
+.r .fresh { font-size: 10px; opacity: 0.45; text-align: right; }
+.r .fresh.stale { opacity: 1; color: #e8a33d; }
+
+@media (prefers-reduced-motion: reduce) {
+  .r .pulse { animation: none; opacity: 0.4; }
+  .r .arc { transition-duration: 0.001s; }
+}

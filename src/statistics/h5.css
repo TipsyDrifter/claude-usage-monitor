@@ -1,0 +1,492 @@
+/* ==========================================================================
+   H5 · 靛藍帳房 — 視覺基準 prototypes/dash-H5-dot-cool.html 的移植
+   （規格書 §8.6 定案：中性白畫布、靛藍主色、網點材質、等寬骨架、
+     方角 highlight＋左緣 3px 實槓；禁止圓角描邊 highlight 與 pill chip）
+   幾何全部由容器寬度推導（原型的做法），畫布從 1280 固定寬適配到
+   statistics 視窗的內容區。
+   ========================================================================== */
+
+.h5 {
+  --h5-bg: #f8f9fb;
+  --h5-card: #ffffff;
+  --h5-line: #e1e5eb;
+  --h5-line-soft: #eceff4;
+  --h5-ink: #1a1d23;
+  --h5-ink2: #5e6470;
+  --h5-ink3: #969eac;
+  --h5-accent: #4e7ecf;
+  --h5-accent-deep: #2e5fb7;
+  --h5-accent-ink: #1f4d9f;
+  --h5-accent-soft: #e3ebf8;
+  --h5-accent-faint: #f0f5fc;
+  --h5-violet: #7e6ac8;
+  --h5-green: #4c8c74;
+  --h5-red: #c13a30;
+  --h5-red-soft: #f9e5e3;
+  --h5-safe: #2f7d5b;
+  --h5-amber: #d99a2b; /* D57 token 化：warn 態的唯一琥珀 */
+  --h5-amber-ink: #a06f14;
+  --h5-cell-empty: #e8ecf2;
+
+  font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas,
+    "Noto Sans TC", "Microsoft JhengHei", monospace;
+  color: var(--h5-ink);
+}
+.h5 .zh {
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+}
+
+/* ---- 頂欄 chips ---- */
+.h5 .head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.h5 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--h5-line);
+  background: var(--h5-card);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 10.5px;
+  color: var(--h5-ink2);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.h5 .chip b { color: var(--h5-ink); font-weight: 600; }
+.h5 .chip.ghost { background: transparent; border-style: dashed; color: var(--h5-ink3); }
+.h5 button.chip { font: inherit; cursor: pointer; text-align: left; }
+.h5 .chip.pick { cursor: pointer; }
+.h5 .chip.pick.on { border-color: var(--h5-accent); color: var(--h5-accent-ink); background: var(--h5-accent-faint); }
+.h5 .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--h5-safe); flex: none; }
+
+/* ---- 卡片 ---- */
+.h5 .grid2 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  align-items: start;
+}
+.h5 .grid2 .g-r1c2 { grid-row: 1; grid-column: 2; }
+.h5 .grid2 .g-full { grid-column: 1 / -1; }
+@media (max-width: 1100px) {
+  .h5 .grid2 { grid-template-columns: 1fr; }
+  .h5 .grid2 .g-r1c2 { grid-row: auto; grid-column: auto; }
+  .h5 .grid2 .g-full { grid-column: auto; }
+}
+.h5 .card {
+  background: var(--h5-card);
+  border: 1px solid var(--h5-line);
+  border-radius: 16px;
+  padding: 18px 22px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(38, 48, 70, 0.03);
+  display: flex;
+  flex-direction: column;
+}
+.h5 .card-head { display: flex; align-items: baseline; gap: 10px; }
+.h5 .card-title { font-family: "Noto Sans TC", sans-serif; font-weight: 900; font-size: 16px; letter-spacing: 0.02em; }
+.h5 .card-tag { font-size: 9px; letter-spacing: 0.16em; color: var(--h5-ink3); font-weight: 600; }
+.h5 .card-head .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* ---- pill 切換（基準檔原樣；期間選擇器用） ---- */
+.h5 .pills { display: flex; background: #ebeef3; border: 1px solid var(--h5-line); border-radius: 99px; padding: 2px; gap: 1px; }
+.h5 .pills button { all: unset; cursor: pointer; font-family: inherit; font-size: 10.5px; font-weight: 600; color: var(--h5-ink3); padding: 4px 13px; border-radius: 99px; letter-spacing: 0.06em; }
+.h5 .pills button.on { background: #fff; color: var(--h5-ink); box-shadow: 0 1px 3px rgba(38, 48, 70, 0.14); }
+.h5 .pills button:hover:not(.on) { color: var(--h5-ink2); }
+
+/* ---- 期間總帳（D60 開場錨點） ---- */
+.h5 .pstats { display: flex; gap: 30px; margin-top: 10px; flex-wrap: wrap; }
+.h5 .pstat .k { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; color: var(--h5-ink3); }
+.h5 .pstat .v { font-size: 21px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.h5 .pstat .v i { font-style: normal; font-size: 11px; color: var(--h5-ink3); font-weight: 600; margin-left: 2px; }
+.h5 .pstat .v.red { color: var(--h5-red); }
+
+/* ---- 匯率卡 ---- */
+.h5 .bignum-row { display: flex; align-items: baseline; gap: 12px; margin-top: 3px; flex-wrap: wrap; }
+.h5 .bignum { font-size: 38px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; color: var(--h5-accent-deep); }
+.h5 .bigunit { font-size: 12px; font-weight: 600; color: var(--h5-ink3); letter-spacing: 0.08em; }
+.h5 .mom-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--h5-red-soft); color: var(--h5-red);
+  font-size: 11px; font-weight: 700; border-radius: 99px; padding: 4px 11px;
+}
+.h5 .mom-chip.down { background: #e6f2ec; color: var(--h5-safe); }
+.h5 .ref-note { margin-left: auto; font-size: 9px; color: var(--h5-ink3); text-align: right; line-height: 1.45; }
+.h5 .fx-sentence {
+  display: flex; align-items: center; gap: 9px; margin-top: 4px;
+  font-family: "Noto Sans TC", sans-serif; font-size: 13.5px; font-weight: 500;
+}
+.h5 .fx-sentence::before { content: ""; width: 3.5px; height: 15px; border-radius: 2px; background: var(--h5-accent); flex: none; }
+.h5 .fx-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; color: var(--h5-ink3); flex-wrap: wrap; }
+.h5 .verdict-box { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--h5-line); border-radius: 8px; padding: 3.5px 9px; color: var(--h5-ink2); }
+.h5 .verdict-box .lbl { color: var(--h5-ink3); letter-spacing: 0.1em; font-weight: 600; }
+.h5 .fx-foot .legend { margin-left: auto; text-align: right; }
+
+/* ---- 即時額度列（D62 主人圈 C：單卡三列，列間細分隔線）——
+        右欄大數字＋重置時刻（可讀性主角），左欄裁決＋點陣條＋預測副行；
+        tone 由裁決句色與點陣格色宣告（單卡無各列左緣槓位） ---- */
+.h5 .lrow { display: flex; gap: 20px; align-items: stretch; padding: 10px 2px 11px; }
+.h5 .lrow + .lrow { border-top: 1px solid var(--h5-line-soft); }
+.h5 .lrow-main { flex: 1; min-width: 0; }
+.h5 .lrow-top { display: flex; align-items: baseline; gap: 8px; }
+.h5 .lrow-label { font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; font-weight: 700; }
+.h5 .lrow-en { font-size: 8.5px; font-weight: 700; letter-spacing: 0.16em; color: var(--h5-ink3); }
+.h5 .lrow-verdict { font-family: "Noto Sans TC", sans-serif; font-size: 12px; font-weight: 700; margin-left: 4px; }
+.h5 .lrow.ok .lrow-verdict { color: var(--h5-accent-ink); }
+.h5 .lrow.warn .lrow-verdict { color: var(--h5-amber-ink); }
+.h5 .lrow.crit .lrow-verdict { color: var(--h5-red); }
+.h5 .lrow.unknown .lrow-verdict { color: var(--h5-ink3); }
+.h5 .lrow-burn { margin-left: auto; font-size: 9.5px; color: var(--h5-ink3); }
+/* 點陣固定尺寸（D63：7×7 正方格，不隨視窗伸縮） */
+.h5 .lrow-main svg { display: block; margin: 6px 0 4px; }
+.h5 .lrow-extra { font-size: 10px; color: var(--h5-ink2); }
+.h5 .lrow-side { flex: none; width: 148px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 3px; }
+.h5 .lrow-pct { font-size: 34px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.h5 .lrow-pct i { font-style: normal; font-size: 13px; color: var(--h5-ink3); font-weight: 600; margin-left: 2px; }
+/* 右欄結局值（D63 側聊拍板：會撞牆顯觸頂、撐得到顯重置時 %、已撞牆顯重置） */
+.h5 .lrow-outcome { font-size: 10px; color: var(--h5-ink2); text-align: right; }
+.h5 .lrow.warn .lrow-outcome.hot { color: var(--h5-amber-ink); font-weight: 700; }
+.h5 .lrow.crit .lrow-outcome.hot { color: var(--h5-red); font-weight: 700; }
+/* Health 頁還在用的小 chip（原 D58 額度卡家族僅存成員） */
+.h5 .lim-chip { font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--h5-accent-ink); background: var(--h5-accent-soft); border-radius: 2px; padding: 2px 6px; }
+.h5 .sec { border-top: 1px solid var(--h5-line-soft); padding-top: 7px; margin-top: 7px; }
+.h5 .sec-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: var(--h5-ink3); margin-bottom: 4px; }
+.h5 .pace-verdict { display: flex; align-items: center; gap: 8px; font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; font-weight: 500; }
+.h5 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.h5 .dot.safe { background: var(--h5-safe); }
+.h5 .dot.warn { background: var(--h5-amber); }
+.h5 .dot.crit { background: var(--h5-red); }
+.h5 .pace-minis { margin-top: 3px; font-size: 10px; color: var(--h5-ink2); }
+.h5 .pace-minis b { color: var(--h5-ink); font-weight: 600; }
+.h5 .wr-line { font-size: 10.5px; color: var(--h5-ink2); }
+.h5 .wr-line b { color: var(--h5-ink); font-weight: 700; font-size: 12px; }
+
+/* ---- 三十日卡 ---- */
+.h5 .daily-body { display: flex; gap: 16px; margin-top: 8px; min-width: 0; }
+.h5 .legend-row { display: flex; gap: 14px; margin-top: 2px; font-size: 9px; color: var(--h5-ink3); align-items: center; flex-wrap: wrap; }
+.h5 .lg { display: inline-flex; align-items: center; gap: 5px; }
+.h5 .lg .sw { width: 8px; height: 8px; border-radius: 2.5px; flex: none; }
+.h5 .lg .sw.bar { background: var(--h5-accent); }
+.h5 .lg .sw.wall { background: var(--h5-red); }
+/* D62：429 事件圖例＝紅點（圓形，對應長條圖條頂的觀測點） */
+.h5 .lg .sw.walldot { background: var(--h5-red); border-radius: 50%; width: 7px; height: 7px; }
+.h5 .lg .sw.zero { height: 3px; border-radius: 1.5px; background: #c2c8d2; }
+.h5 .lg .sw.gap { background: transparent; border: 1.2px solid var(--h5-ink3); }
+.h5 .health-side { width: 196px; flex: none; border-left: 1px solid var(--h5-line-soft); padding-left: 16px; display: flex; flex-direction: column; }
+.h5 .cov { font-size: 21px; font-weight: 700; line-height: 1.1; }
+.h5 .cov i { font-style: normal; font-size: 10px; color: var(--h5-ink3); font-weight: 600; }
+.h5 .cov-lbl { font-size: 9.5px; color: var(--h5-ink2); margin-top: 1px; }
+.h5 .counts { font-size: 9.8px; color: var(--h5-ink2); margin-top: 6px; line-height: 1.6; }
+.h5 .counts b { color: var(--h5-ink); font-weight: 600; }
+.h5 .mini-list { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--h5-line); }
+.h5 .ml-title { font-size: 8.5px; font-weight: 700; letter-spacing: 0.14em; color: var(--h5-ink3); margin-bottom: 3px; }
+.h5 .mini-row { display: flex; align-items: center; gap: 6px; font-size: 9.3px; color: var(--h5-ink2); line-height: 1.75; white-space: nowrap; }
+.h5 .mini-row .md { width: 7px; height: 7px; border-radius: 2px; flex: none; border: 1.2px solid var(--h5-ink3); }
+.h5 .mini-row .md.wall { border: none; background: var(--h5-red); border-radius: 50%; }
+.h5 .mini-row b { color: var(--h5-ink); font-weight: 600; }
+
+/* ---- 歸因卡 ---- */
+.h5 .attr-body { display: flex; align-items: center; gap: 10px; }
+.h5 .attr-list { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.h5 .attr-row { display: flex; align-items: center; gap: 9px; padding: 7px 11px; }
+.h5 .attr-row.hl { background: var(--h5-accent-faint); box-shadow: inset 3px 0 0 var(--h5-accent); }
+.h5 .attr-row .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.h5 .attr-row .nm { font-family: "Noto Sans TC", sans-serif; font-size: 12px; font-weight: 500; }
+.h5 .attr-row .pc { margin-left: auto; font-size: 19px; font-weight: 700; }
+.h5 .attr-row .pc i { font-style: normal; font-size: 10px; color: var(--h5-ink3); font-weight: 600; }
+
+.h5 .foot-note { font-size: 9.5px; color: var(--h5-ink3); line-height: 1.6; }
+
+/* v1.1.2（D70）：嚴格照 H5 原型——原型有的元素用原型的 radius（.card 16／.chip 與 .mom-chip 99／.lim-chip 2／.verdict-box 8）；原型沒有的 M6 證據匯出卡（.evi-preview／.evi-btn）方角；健康度的 .stat-tile 比照 .card。D58 的圓角 vcard 已被 .lrow 取代，死碼移除。 */
+
+/* ---- 表格基底 ---- */
+.h5 table.tbl { width: 100%; font-size: 11px; border-collapse: collapse; }
+.h5 table.tbl th { text-align: left; font-size: 8.5px; letter-spacing: 0.14em; font-weight: 700; color: var(--h5-ink3); padding-bottom: 7px; }
+.h5 table.tbl th.r, .h5 table.tbl td.r { text-align: right; font-variant-numeric: tabular-nums; }
+.h5 table.tbl td { padding: 7px 0; border-top: 1px solid var(--h5-line-soft); color: var(--h5-ink); }
+.h5 table.tbl td.mut { color: var(--h5-ink2); }
+
+/* ---- 通用小件 ---- */
+.h5 .stat-tile { background: var(--h5-card); border: 1px solid var(--h5-line); border-radius: 16px; padding: 13px 16px; box-shadow: 0 1px 2px rgba(38, 48, 70, 0.03); }
+.h5 .stat-tile .lbl { font-size: 8.5px; letter-spacing: 0.14em; font-weight: 700; color: var(--h5-ink3); }
+.h5 .stat-tile .val { font-size: 22px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+/* D57 覆核 #1：滿寬琥珀淡染違規 → 白卡＋琥珀左槓（D50 方角語言） */
+.h5 .warn-band { display: flex; gap: 9px; align-items: flex-start; background: var(--h5-card); border: 1px solid var(--h5-line); border-radius: 12px; box-shadow: inset 3px 0 0 var(--h5-amber), 0 1px 2px rgba(38, 48, 70, 0.03); padding: 10px 14px; font-size: 11.5px; color: var(--h5-ink2); line-height: 1.6; }
+.h5 .warn-band svg { color: var(--h5-amber-ink); }
+/* 量條歸靛藍（覆核 #4：狀態色不當面用） */
+.h5 .covbar { height: 7px; flex: 1; background: var(--h5-cell-empty); border-radius: 4px; overflow: hidden; }
+.h5 .covbar > div { height: 100%; border-radius: 4px; background: var(--h5-accent); }
+.h5 .h5btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--h5-line); background: var(--h5-card); border-radius: 99px; padding: 5px 13px; font-size: 10.5px; color: var(--h5-ink2); cursor: pointer; font-family: inherit; }
+.h5 .h5btn:hover { color: var(--h5-ink); }
+
+/* ==========================================================================
+   D57 · Tailwind 殘留色全域重映射（覆核 #11–#14 批次修）
+   slate 是帶藍紫的 Tailwind 灰、rose 偏粉、claude 橙是舊品牌色、emerald 非
+   H5 綠——凡在 .h5 底下出現一律折回 H5 家族。specificity (0,2,0) 蓋過
+   utility (0,1,0)，之後新頁沿用舊 class 也自動歸隊。
+   ========================================================================== */
+.h5 .text-slate-800, .h5 .text-slate-700 { color: var(--h5-ink); }
+.h5 .text-slate-600, .h5 .text-slate-500 { color: var(--h5-ink2); }
+.h5 .text-slate-400, .h5 .text-slate-300 { color: var(--h5-ink3); }
+.h5 .hover\:text-slate-800:hover, .h5 .hover\:text-slate-700:hover { color: var(--h5-ink); }
+.h5 .border-slate-200 { border-color: var(--h5-line); }
+.h5 .border-slate-100 { border-color: var(--h5-line-soft); }
+.h5 .bg-slate-50 { background-color: var(--h5-bg); }
+.h5 .hover\:bg-slate-50:hover { background-color: var(--h5-accent-faint); }
+.h5 .bg-slate-100, .h5 .bg-slate-200\/60 { background-color: var(--h5-cell-empty); }
+.h5 .bg-slate-300 { background-color: var(--h5-cell-empty); }
+
+.h5 .text-rose-800, .h5 .text-rose-600, .h5 .text-rose-500, .h5 .text-rose-400 { color: var(--h5-red); }
+.h5 .hover\:text-rose-500:hover, .h5 .hover\:text-rose-600:hover { color: var(--h5-red); }
+.h5 .bg-rose-50 { background-color: var(--h5-red-soft); }
+.h5 .border-rose-200 { border-color: #ebc7c4; }
+
+.h5 .bg-claude-500 { background-color: var(--h5-accent); }
+.h5 .hover\:bg-claude-600:hover { background-color: var(--h5-accent-deep); }
+.h5 .text-claude-500, .h5 .text-claude-600 { color: var(--h5-accent); }
+.h5 .text-claude-700, .h5 .text-claude-800 { color: var(--h5-accent-ink); }
+.h5 .bg-claude-50, .h5 .bg-claude-100, .h5 .bg-claude-200 { background-color: var(--h5-accent-soft); }
+
+.h5 .text-emerald-700, .h5 .text-emerald-600, .h5 .text-emerald-500 { color: var(--h5-safe); }
+.h5 .bg-emerald-100 { background-color: #e4efe9; }
+.h5 .text-amber-600, .h5 .text-amber-500 { color: var(--h5-amber-ink); }
+
+/* mood 漸層條全部平塗靛藍（覆核 #10：H5 無漸層語言、量條歸 accent） */
+.h5 .bg-gradient-to-r { background-image: none; background-color: var(--h5-accent); }
+
+/* ==========================================================================
+   D57 · 速度感 · 點陣流速條 pace-flow
+   波前週期 P = 48 / burnPerHour（反推 burn = 48/P）；lit 格數 = percent。
+   參考圖只取「能量在流動」；材質仍是 H5 網點，tone 由左緣實槓宣告。
+   ========================================================================== */
+.h5 .pace-flow { display: flex; gap: 2.6px; margin-top: 9px;
+  --pf-n: 30; --pf-dur: 12s; --pf-color: var(--h5-accent); }
+.h5 .pace-flow i { width: 5px; height: 5px; border-radius: 1.9px; background: var(--h5-cell-empty); flex: none; }
+.h5 .pace-flow i.lit { background: var(--pf-color); opacity: .28;
+  animation: h5-pace-flow var(--pf-dur) linear infinite;
+  /* 延遲階梯 (i−n)×P/n：負值→開頁即在流；相位領先 ∝ (n−i)→波前由左向右 */
+  animation-delay: calc((var(--pf-i) - var(--pf-n)) * var(--pf-dur) / var(--pf-n)); }
+@keyframes h5-pace-flow {
+  0% { opacity: .26 } 7% { opacity: 1 } 30% { opacity: .55 } 100% { opacity: .26 } }
+.h5 .pace-flow.warn { --pf-color: var(--h5-amber); }
+.h5 .pace-flow.crit { --pf-color: var(--h5-red); }
+/* 零燃燒：不流動，全體同步慢呼吸 */
+.h5 .pace-flow.idle i.lit { animation: h5-pace-breath 6s ease-in-out infinite; animation-delay: 0s; }
+@keyframes h5-pace-breath { 0%, 100% { opacity: .42 } 50% { opacity: .64 } }
+/* 已撞牆：流動停止，警示紅雙擊心跳 */
+.h5 .pace-flow.wall i.lit { animation: h5-pace-wall 2.2s ease-in-out infinite; animation-delay: 0s; }
+@keyframes h5-pace-wall {
+  0%, 100% { opacity: .5 } 10% { opacity: 1 } 22% { opacity: .58 } 32% { opacity: 1 } 52% { opacity: .5 } }
+/* 降級：靜態亮度階梯（左暗→右亮）保留方向語意 */
+@media (prefers-reduced-motion: reduce) {
+  .h5 .pace-flow i.lit { animation: none; opacity: calc(.3 + .7 * var(--pf-i) / var(--pf-n)); }
+  .h5 .pace-flow.wall i.lit { opacity: .9; }
+}
+
+/* 點陣額度條的流動（SVG 版，D62 起為今日頁即時額度）——格子是事實
+   （1 格=1%），流動只當光澤：亮度下限 .55，格數永遠可讀 */
+.h5 svg.pace-flow-svg .pf-cell {
+  animation: h5-pace-flow-svg var(--pf-dur) linear infinite;
+  animation-delay: calc((var(--pf-i) - var(--pf-n)) * var(--pf-dur) / var(--pf-n)); }
+@keyframes h5-pace-flow-svg { 0% { opacity: .55 } 7% { opacity: 1 } 30% { opacity: .75 } 100% { opacity: .55 } }
+/* 已撞牆：流動停止，警示紅雙擊心跳（與 DOM 版 pace-flow.wall 同語言） */
+.h5 svg.pace-flow-svg.wall .pf-cell { animation: h5-pace-wall-svg 2.2s ease-in-out infinite; animation-delay: 0s; }
+@keyframes h5-pace-wall-svg {
+  0%, 100% { opacity: .6 } 10% { opacity: 1 } 22% { opacity: .66 } 32% { opacity: 1 } 52% { opacity: .6 } }
+/* 零燃燒：不流動，全體同步慢呼吸 */
+.h5 svg.pace-flow-svg.idle .pf-cell { animation: h5-pace-breath-svg 6s ease-in-out infinite; animation-delay: 0s; }
+@keyframes h5-pace-breath-svg { 0%, 100% { opacity: .62 } 50% { opacity: .85 } }
+@media (prefers-reduced-motion: reduce) {
+  .h5 svg.pace-flow-svg .pf-cell,
+  .h5 svg.pace-flow-svg.wall .pf-cell,
+  .h5 svg.pace-flow-svg.idle .pf-cell { animation: none; }
+}
+
+/* ==========================================================================
+   M5 · 匯率轉正（D64）——宣告閘、模型倍率、尖峰熱圖、今日頁階梯圖／方案建議
+   ========================================================================== */
+.h5 .mom-chip.ns { background: var(--h5-cell-empty); color: var(--h5-ink2); }
+.h5 .ci-note { font-size: 10.5px; color: var(--h5-ink2); font-variant-numeric: tabular-nums; }
+.h5 .ci-note b { color: var(--h5-ink); font-weight: 600; }
+.h5 .verdict-box.declared { border-style: solid; border-color: var(--h5-accent); color: var(--h5-accent-ink); background: var(--h5-accent-faint); }
+.h5 .gates { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin-top: 7px; font-size: 9.8px; color: var(--h5-ink2); align-items: baseline; }
+.h5 .gates .g { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: var(--h5-ink3); letter-spacing: 0.04em; white-space: nowrap; }
+.h5 .gates .g::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--h5-cell-empty); flex: none; }
+.h5 .gates .g.pass { color: var(--h5-accent-ink); }
+.h5 .gates .g.pass::before { background: var(--h5-accent); }
+.h5 .gates .d { font-variant-numeric: tabular-nums; }
+.h5 .basket-line { font-size: 10px; color: var(--h5-ink2); margin-top: 6px; line-height: 1.6; }
+.h5 .basket-line b { color: var(--h5-ink); font-weight: 600; }
+.h5 .method-note { font-size: 9px; color: var(--h5-ink3); margin-top: 6px; line-height: 1.6; border-top: 1px dashed var(--h5-line); padding-top: 5px; }
+.h5 .lg .sw.basket { background: transparent; border: 1.4px dashed var(--h5-violet); border-radius: 1px; }
+.h5 .lg .sw.ci { background: var(--h5-accent-soft); border: 1px solid var(--h5-accent); }
+
+/* 模型倍率表 */
+.h5 .mult-bar { height: 6px; background: var(--h5-cell-empty); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.h5 .mult-bar > div { height: 100%; background: var(--h5-accent); border-radius: 3px; }
+.h5 .mult-bar > div.hot { background: var(--h5-amber); }
+
+/* 尖峰熱圖：7 列 × 24 格，格色深淺＝Σ正 Δ%（由資料算，格內 title 可反推） */
+.h5 .heat { display: grid; grid-template-columns: 22px repeat(24, 1fr); gap: 2px; margin-top: 10px; align-items: center; }
+.h5 .heat .hl { font-size: 8.5px; color: var(--h5-ink3); font-weight: 700; letter-spacing: 0.06em; }
+.h5 .heat .hc { aspect-ratio: 1; border-radius: 2px; background: var(--h5-accent); min-width: 0; }
+.h5 .heat .hx { font-size: 7.5px; color: var(--h5-ink3); text-align: center; }
+.h5 .bands { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.h5 .band { font-size: 10px; color: var(--h5-ink2); }
+.h5 .band .k { font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; color: var(--h5-ink3); }
+.h5 .band .v { font-size: 15px; font-weight: 700; color: var(--h5-ink); font-variant-numeric: tabular-nums; }
+.h5 .band .v i { font-style: normal; font-size: 9px; color: var(--h5-ink3); font-weight: 600; margin-left: 2px; }
+
+/* 今日頁：階梯圖圖例、方案建議 */
+.h5 .lg .sw.stair-ghost { background: transparent; border-top: 1.6px dashed var(--h5-accent); height: 0; border-radius: 0; width: 12px; }
+.h5 .dot.ok { background: var(--h5-accent); }
+.h5 .dot.unknown { background: var(--h5-ink3); }
+.h5 .plan-body { display: flex; gap: 18px; align-items: flex-start; }
+.h5 .plan-side { width: 224px; flex: none; border-left: 1px solid var(--h5-line-soft); padding-left: 16px; margin-top: 10px; }
+.h5 .plan-headline { font-family: "Noto Sans TC", sans-serif; font-size: 14px; font-weight: 700; }
+.h5 .plan-headline.ok { color: var(--h5-accent-ink); }
+.h5 .plan-headline.warn { color: var(--h5-amber-ink); }
+.h5 .plan-headline.unknown { color: var(--h5-ink3); }
+
+/* ==========================================================================
+   M6 · 歷史檢視頁與證據匯出（D65）
+   ========================================================================== */
+.h5 .pager { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--h5-line); border-radius: 99px; padding: 2px 4px; background: var(--h5-card); }
+.h5 .pager button { all: unset; cursor: pointer; display: inline-flex; padding: 3px 5px; border-radius: 99px; color: var(--h5-ink2); }
+.h5 .pager button:hover:not(:disabled) { background: var(--h5-accent-faint); color: var(--h5-accent-ink); }
+.h5 .pager button:disabled { color: var(--h5-line); cursor: default; }
+.h5 .pager span { font-size: 11px; font-weight: 700; padding: 0 6px; min-width: 120px; text-align: center; font-variant-numeric: tabular-nums; }
+.h5 .lg .sw.stair-white { background: #fff; border: 1.2px solid var(--h5-accent); }
+
+/* 證據匯出卡 */
+.h5 .evi-body { display: flex; gap: 18px; margin-top: 10px; align-items: flex-start; }
+.h5 .evi-preview { flex: 1; min-width: 0; border: 1px solid var(--h5-line); border-radius: 0; overflow: hidden; background: #fff; }
+.h5 .evi-preview img { display: block; width: 100%; height: auto; }
+.h5 .evi-side { width: 260px; flex: none; display: flex; flex-direction: column; gap: 8px; }
+.h5 .evi-btn { display: flex; align-items: center; gap: 8px; border: 1px solid var(--h5-line); background: var(--h5-card); border-radius: 0; padding: 9px 12px; font-family: inherit; cursor: pointer; text-align: left; color: var(--h5-ink); }
+.h5 .evi-btn:hover:not(:disabled) { border-color: var(--h5-accent); background: var(--h5-accent-faint); }
+.h5 .evi-btn:disabled { opacity: 0.55; cursor: default; }
+.h5 .evi-btn b { font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; font-weight: 700; }
+.h5 .evi-btn small { display: block; font-size: 9.5px; color: var(--h5-ink3); margin-top: 1px; }
+.h5 .evi-btn.primary { border-color: var(--h5-accent); box-shadow: inset 3px 0 0 var(--h5-accent); }
+.h5 .evi-status { font-size: 10px; color: var(--h5-ink2); line-height: 1.55; word-break: break-all; border-top: 1px dashed var(--h5-line); padding-top: 6px; }
+.h5 .evi-status.err { color: var(--h5-red); }
+
+/* ==========================================================================
+   v1.4 · 有回應的畫面（D77）——主人圈選留下的動效，數值全部照原型
+   prototypes/motion-M1-maximal.html 的 .fx-eXX 規則抄。
+   紀律三條：(1) 不改任何 radius／間距／顏色 token／版面，只加 transition／
+   animation／小元素；(2) 「值真的變了才動」的判斷在 React 側（lib/motion.ts
+   記上一幀），CSS 只負責演；(3) 檔尾的 prefers-reduced-motion 把全部歸零。
+   ========================================================================== */
+
+/* ---- E01 側欄項目 hover 底色淡入＋按下微縮（原 inline style 改 class） ---- */
+.h5 .nav { position: relative; }
+.h5 .nav-btn {
+  display: flex; width: 100%; align-items: center; gap: 8px; text-align: left;
+  padding: 9px 14px; font-size: 12.5px; font-weight: 500;
+  color: var(--h5-ink2); background: none; border: none; cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, transform 0.08s ease;
+}
+.h5 .nav-btn:hover:not(.on) { background: #f4f6fa; color: var(--h5-ink); }
+.h5 .nav-btn:active { transform: scale(0.985); }
+/* active 態的顏色語意照舊；左緣 3px 槓交給 .ind（E20），不再各自畫 inset */
+.h5 .nav-btn.on { font-weight: 700; color: var(--h5-accent-ink); background: var(--h5-accent-faint); }
+
+/* ---- E20 側欄指示槓滑到新項目（D50 的左緣 3px 實槓，改成連續位移） ---- */
+.h5 .nav .ind {
+  position: absolute; left: 0; width: 3px; background: var(--h5-accent);
+  transition: top 0.22s cubic-bezier(0.22, 0.9, 0.3, 1),
+              height 0.22s cubic-bezier(0.22, 0.9, 0.3, 1);
+  pointer-events: none;
+}
+
+/* ---- E02 可點的 chip／pills hover 抬升 1px、按下縮 3%（只給可點的） ---- */
+.h5 .chip.pick, .h5 .pills button {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s, background 0.12s;
+}
+.h5 .chip.pick:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(38, 48, 70, 0.10); border-color: #b9c8e6; }
+.h5 .chip.pick:active, .h5 .pills button:active { transform: translateY(0) scale(0.97); box-shadow: none; }
+
+/* ---- E03 匯出按鈕：圖示右移 2px（送出方向的暗示）＋按下下沉 ---- */
+.h5 .evi-btn { transition: border-color 0.12s, background 0.12s, transform 0.08s; }
+.h5 .evi-btn:active:not(:disabled) { transform: scale(0.985); }
+.h5 .evi-btn .ico { display: inline-flex; flex: none; transition: transform 0.16s ease; }
+.h5 .evi-btn:hover:not(:disabled) .ico { transform: translateX(2px); }
+
+/* ---- E04 整張可點的卡 hover 抬升。D77：正式版目前沒有這種卡，class 先定義
+        好（等日後有「點卡展開全窗樣本」這類互動再掛上 .clickable）。 ---- */
+.h5 .card.clickable { cursor: pointer; transition: box-shadow 0.16s ease, transform 0.16s ease, border-color 0.16s; }
+.h5 .card.clickable:hover { box-shadow: 0 6px 18px rgba(38, 48, 70, 0.10); transform: translateY(-1px); border-color: #d3dbe8; }
+
+/* ---- E09 變化的數字底色閃一下琥珀（誰變了） ---- */
+@keyframes h5-flash { 0% { background: rgba(217, 154, 43, 0.30); } 100% { background: transparent; } }
+.h5 .flash { animation: h5-flash 0.9s ease-out; border-radius: 3px; }
+
+/* ---- E10 點陣新亮的格子逐格彈出（剛剛燒掉這幾格） ---- */
+@keyframes h5-pop { 0% { transform: scale(0.2); opacity: 0; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
+.h5 .pop { animation: h5-pop 0.32s ease-out both; transform-box: fill-box; transform-origin: center; }
+
+/* ---- E11 燃燒速度差值飄出（這一次刷新比上次多／少多少，不是趨勢判斷） ---- */
+@keyframes h5-float { 0% { opacity: 0; transform: translateY(4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+.h5 .lrow-burn { position: relative; }
+.h5 .delta { position: absolute; right: 0; top: -12px; font-size: 9px; font-weight: 700; pointer-events: none; white-space: nowrap; animation: h5-float 1.6s ease-out forwards; }
+.h5 .delta.up { color: var(--h5-red); }
+.h5 .delta.down { color: var(--h5-safe); }
+
+/* ---- E12 裁決句換字 crossfade（結論變了，畫面承認它換了說法） ---- */
+.h5 .lrow-verdict { transition: opacity 0.18s; }
+.h5 .lrow-verdict.swap { opacity: 0; }
+
+/* ---- E13 右下角 toast（匯出＝toast，一次只留一條） ---- */
+.h5 .toasts { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.h5 .toast { background: var(--h5-ink); color: #fff; font-size: 11px; padding: 8px 12px; border-radius: 6px; display: flex; gap: 8px; align-items: center; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); animation: h5-toast 2.6s ease forwards; }
+.h5 .toast .ck { color: #7fd1a6; font-weight: 700; }
+@keyframes h5-toast { 0% { opacity: 0; transform: translateY(8px); } 10%, 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(4px); } }
+
+/* ---- E14 複製完成：按鈕本身變綠＋圖示變 ✓（就是你按的這顆完成了） ---- */
+.h5 .btn-done { border-color: #2f7d5b !important; background: #e6f2ec !important; color: #2f7d5b !important; }
+
+/* ---- E15 「✓ 設定已儲存」小字淡入淡出（settingsError 紅字的成功版） ---- */
+.h5 .saved { font-size: 10px; color: var(--h5-safe); margin-left: 8px; animation: h5-saved 1.5s ease forwards; }
+@keyframes h5-saved { 0% { opacity: 0; } 12%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- E28 載入骨架（換掉「載入中…」一行字） ---- */
+.h5 .skel { height: 12px; border-radius: 3px; background: var(--h5-line-soft); margin-top: 8px; position: relative; overflow: hidden; }
+.h5 .skel::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); animation: h5-shim 1.2s infinite; }
+@keyframes h5-shim { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+/* ---- E21–E24 圖表 hover 小標：深色底、10px、跟游標、不吃滑鼠 ---- */
+.h5 .tip { position: fixed; background: var(--h5-ink); color: #fff; font-size: 10px; padding: 4px 7px; border-radius: 4px; pointer-events: none; white-space: nowrap; z-index: 70; transform: translate(-50%, -110%); }
+/* E21 點陣格：hover 的那一格描 1px 墨線 */
+.h5 svg.dots rect:hover { stroke: var(--h5-ink); stroke-width: 1; }
+/* E23 熱圖格（改版）：不放大，只用 1px 黑框標出「現在在哪一格」＋值標——
+   放大會蓋住鄰格，而熱圖的價值正是鄰格的相對深淺 */
+.h5 .heat .hc:hover { outline: 1px solid var(--h5-ink); }
+
+/* ---- 規則 4：使用者要求減少動態時全部歸零 ---- */
+@media (prefers-reduced-motion: reduce) {
+  .h5 *, .h5 *::before, .h5 *::after {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+  }
+  .h5 .skel::after { animation: none; }
+}
+
+/* v1.6（D80）：倍率表的家族分組列 */
+.h5 table.tbl tr.grp td { padding-top: 10px; padding-bottom: 4px; border-top: 1px solid var(--h5-line); background: transparent; }
+.h5 table.tbl tr.grp:first-child td { border-top: none; }
+
+/* v1.7（D81）：「怎麼算的 ▸」摺疊——術語版說明收在這裡，主文只留白話一句 */
+.h5 details.how { margin-top: 6px; font-size: 10.2px; color: var(--h5-ink2); }
+.h5 details.how > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 4px; color: var(--h5-ink3); font-weight: 600; letter-spacing: 0.04em; user-select: none; }
+.h5 details.how > summary::-webkit-details-marker { display: none; }
+.h5 details.how > summary::after { content: "▸"; font-size: 9px; transition: transform 150ms ease; }
+.h5 details.how[open] > summary::after { transform: rotate(90deg); }
+.h5 details.how > summary:hover { color: var(--h5-ink2); }
+.h5 details.how .how-body { margin-top: 5px; padding: 7px 10px; border-left: 2px solid var(--h5-line); background: var(--h5-bg); line-height: 1.55; }
+@media (prefers-reduced-motion: reduce) { .h5 details.how > summary::after { transition: none; } }
