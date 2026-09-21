@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude Usage Monitor — Demo Preview</title>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, "Segoe UI", "Noto Sans TC", "Inter", sans-serif;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(216, 119, 41, 0.15), transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1), transparent 40%),
+          linear-gradient(135deg, #fafaf7, #f0e9dc);
+        min-height: 100vh;
+        color: #2c2418;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 48px 32px;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 8px;
+        background: linear-gradient(90deg, #d87729, #c25e1e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .subtitle {
+        font-size: 14px;
+        color: #6b5d4a;
+        margin-bottom: 40px;
+      }
+      .panels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+      .panel h2 {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #998875;
+        margin: 0 0 12px;
+      }
+      .panel p.note {
+        font-size: 12px;
+        color: #998875;
+        margin: 0 0 16px;
+      }
+      .widget-stage {
+        position: relative;
+        height: 360px;
+        background:
+          linear-gradient(135deg, #1e1e1e, #2d2d2d);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      }
+      .widget-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 30% 40%, rgba(216, 119, 41, 0.2), transparent 50%),
+          radial-gradient(circle at 70% 60%, rgba(139, 92, 246, 0.15), transparent 50%);
+      }
+      .widget-stage::after {
+        content: "桌面背景模擬";
+        position: absolute;
+        bottom: 8px;
+        left: 12px;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.3);
+        letter-spacing: 0.1em;
+      }
+      .widget-iframe {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        width: 260px;
+        height: 200px;
+        border: 0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      }
+      .settings-iframe {
+        width: 100%;
+        height: 580px;
+        border: 0;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      .footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        font-size: 12px;
+        color: #998875;
+        text-align: center;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 500;
+        background: rgba(216, 119, 41, 0.15);
+        color: #c25e1e;
+        margin-left: 8px;
+      }
+      .controls {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .controls a {
+        font-size: 11px;
+        color: #6b5d4a;
+        text-decoration: none;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+      .controls a:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+      @media (max-width: 900px) {
+        .panels {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Claude Usage Monitor</h1>
+      <p class="subtitle">
+        UI 預覽 — 不需登入、不需編譯 Rust，直接看介面長相
+        <span class="badge">DEMO</span>
+      </p>
+
+      <div class="panels">
+        <div class="panel">
+          <h2>浮動視窗 (Floating Widget)</h2>
+          <p class="note">
+            常駐在桌面右下角，always-on-top、半透明、可拖曳。240 × 140 px。
+          </p>
+          <div class="widget-stage">
+            <iframe
+              class="widget-iframe"
+              src="/widget.html?demo"
+              title="Floating Widget Demo"
+            ></iframe>
+          </div>
+          <div class="controls">
+            <a href="/widget.html?demo" target="_blank">在新分頁開啟 widget</a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>設定視窗 (Settings)</h2>
+          <p class="note">
+            從系統匣右鍵選單或 widget 齒輪圖示開啟。完整顯示四個主要使用量
+            +
+            折疊展開的進階區（Daily routine runs / Extra usage）。
+          </p>
+          <iframe
+            class="settings-iframe"
+            src="/settings.html?demo"
+            title="Settings Demo"
+          ></iframe>
+          <div class="controls">
+            <a href="/settings.html?demo" target="_blank">在新分頁開啟 settings</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Mock data 來自 src/lib/mock.ts · 真實版本資料來自 claude.ai/settings/usage
+      </div>
+    </div>
+  </body>
+</html>
