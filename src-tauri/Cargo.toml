@@ -1,0 +1,54 @@
+[package]
+name = "claude-usage-monitor"
+version = "1.8.11"
+description = "Track Claude.ai plan usage from your Windows desktop"
+authors = ["Kosa"]
+edition = "2021"
+
+[lib]
+name = "claude_usage_monitor_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-store = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-notification = "2"
+# v1.8.2: 診斷包「另存新檔」對話框（只在 Rust 端用，前端不叫，capabilities 不用開）
+tauri-plugin-dialog = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+tokio = { version = "1", features = ["full"] }
+axum = "0.7"
+tower-http = { version = "0.5", features = ["cors"] }
+
+image = "0.25"
+imageproc = "0.25"
+ab_glyph = "0.2"
+
+chrono = { version = "0.4", features = ["serde"] }
+once_cell = "1"
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+
+# M2: fullscreen detection for the widget's auto-dodge
+windows-sys = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+] }
+
+# v0.2: local SQLite history + webhook token
+rusqlite = { version = "0.39", features = ["bundled", "chrono"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+getrandom = "0.4"
+base64 = "0.22"
+# v1.8.2: 診斷包（settings 頁「打包診斷資料」）
+zip = { version = "2", default-features = false, features = ["deflate"] }
