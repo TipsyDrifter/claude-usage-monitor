@@ -1,0 +1,182 @@
+/* ==========================================================================
+   W5 · 深色儀器 — 視覺基準檔 prototypes/widget-W5-synthesis.html 的 1:1 移植
+   （規格書 §8.6 定案，D34 三修正已內建：微型條無 ▼、微型數字整數、零動畫）
+
+   色彩紀律：狀態是唯一的色彩來源——
+     安全 <留意值        = 暖象牙 #D6D2C8（數字對面板 14.7:1）
+     注意 留意值–撞牆值  = 琥珀   #E8A33D（9.6:1）＋外框章
+     警戒 ≥撞牆值        = 珊瑚   #F0594C（7.0:1）＋實心章
+   象牙針（.rl）畫在留意值；pace ▼ 恆為暖灰（時間是事實不是狀態）。
+   v1.2（D67-Q17／D74）：留意值／撞牆值讀設定（預設 70／90），由 Widget.tsx 經
+   lib/tone.ts 決定 s-safe／s-warn／s-crit 並以 inline style 定針位——這裡不再有硬編碼閾值，
+   .rl 的 left 只是沒拿到設定前的預設。
+   ========================================================================== */
+
+.w5 {
+  box-sizing: border-box;
+  font-family: Bahnschrift, "Segoe UI", "Microsoft JhengHei", sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #ece9e2;
+  background: linear-gradient(180deg, #1a1d21 0%, #16181c 55%, #121416 100%);
+  border: 1px solid rgba(0, 0, 0, 0.75);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 22px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  cursor: default;
+}
+
+/* 狀態類別（--fill = 針色、--numc = 數字色） */
+.w5 .s-safe { --fill: #d6d2c8; --numc: #ece9e2; }
+.w5 .s-warn { --fill: #e8a33d; --numc: #f0b45c; }
+.w5 .s-crit { --fill: #f0594c; --numc: #ff7a6e; }
+
+.w5 .num {
+  font-weight: 600;
+  color: var(--numc);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.w5 .n17 { font-size: 17px; }
+.w5 .n27 { font-size: 27px; }
+.w5 .unit { font-size: 0.5em; font-weight: 600; color: #8f8a82; margin-left: 2px; }
+.w5 .idlab { font-size: 11px; font-weight: 700; color: #918d85; letter-spacing: 0.1em; flex: none; }
+
+/* v1.3 帳號行（D75 決策點 7）：card／panel 最上面一行，左＝名字（點了循環）、
+   右＝看的是別的座位時「N 小時前的值」。W5 原型沒有這個元素，是新增。 */
+.w5 .acct { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-height: 12px; }
+.w5 .acct button {
+  font: inherit; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #a9a49b;
+  background: none; border: none; padding: 0; cursor: pointer; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 170px;
+}
+.w5 .acct button:hover { color: #ece9e2; }
+.w5 .acct .ago { margin-left: auto; font-size: 10px; color: #f0b45c; white-space: nowrap; }
+/* 看別的座位：整支變灰，過期值不能長得像即時（D67-Q8） */
+.w5.ghost .num, .w5.ghost .fill, .w5.ghost .lreset, .w5.ghost .stats { opacity: 0.55; }
+.w5.ghost .chip { opacity: 0.55; }
+
+/* 針軌 */
+.w5 .bar { position: relative; flex: 1; background: #494a50; border-radius: 3px; min-width: 40px; }
+.w5 .bar.h3 { height: 3px; }
+.w5 .bar.h6 { height: 6px; }
+.w5 .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--fill); border-radius: 3px; }
+.w5 .rl { position: absolute; left: 70%; top: -1px; bottom: -1px; width: 1px; background: rgba(240, 89, 76, 0.55); }
+.w5 .s-crit .rl { background: rgba(15, 19, 24, 0.55); }
+
+/* pace ▼（中性暖灰、永不變色；D34：只出現在標準卡以上） */
+.w5 .pace {
+  position: absolute;
+  top: -6px;
+  width: 0;
+  height: 0;
+  margin-left: -4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #a8a399;
+}
+
+/* ---- 微型條 220×32 ---- */
+.w5.micro { width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 7px; }
+.w5.micro .idlab { font-size: 10px; }
+.w5 .duo { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 52px; }
+.w5 .duo .bar { flex: none; min-width: 0; }
+.w5 .mcol { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 2px; flex: none; }
+.w5 .mreset { font-size: 10.5px; color: #c6c1b7; white-space: nowrap; line-height: 1.2; }
+.w5 .rsym { color: #7b766d; font-size: 9.5px; margin-right: 1px; }
+.w5 .m7d { font-size: 10px; line-height: 1.2; white-space: nowrap; }
+.w5 .m7d b { font-weight: 700; color: #918d85; letter-spacing: 0.06em; font-size: 9px; margin-right: 3px; }
+.w5 .m7d .mv { font-weight: 600; color: var(--numc); font-variant-numeric: tabular-nums; }
+.w5 .m7d .mv.quiet { color: #b5b0a7; }
+.w5 .msep { color: #615d55; margin: 0 3px; }
+
+/* ---- 標準卡 280×228（D53 三軌） ---- */
+.w5.card { width: 280px; height: 228px; display: flex; flex-direction: column; justify-content: center; padding: 12px 14px; }
+.w5 .hair { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 11px 0; flex: none; }
+.w5 .l1 { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.w5 .lreset { margin-left: auto; font-size: 11px; color: #7b766d; white-space: nowrap; }
+.w5 .lreset b { font-weight: 600; color: #c6c1b7; }
+.w5 .l2 { display: flex; align-items: center; gap: 10px; }
+
+/* 簽章：琥珀＝外框（提示）、珊瑚＝實心（最重靜態強調）——形制差異＝色弱second冗餘 */
+.w5 .chip { font-size: 10px; line-height: 1; border-radius: 3px; font-weight: 700; letter-spacing: 0.14em; flex: none; }
+.w5 .chip.cw { color: #f0b45c; border: 1px solid rgba(240, 180, 92, 0.5); padding: 2px 5px; }
+.w5 .chip.cc { color: #14161a; background: #f0594c; padding: 3px 6px; }
+
+/* ---- 展開面板 320×336（D53 三軌） ---- */
+.w5.panel { width: 320px; height: 336px; display: flex; flex-direction: column; justify-content: space-between; padding: 14px; }
+.w5.panel .hair { margin: 0; }
+.w5 .stats { display: flex; gap: 16px; }
+.w5 .stat { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.w5 .slab { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: #87837b; }
+.w5 .sval { font-size: 18px; font-weight: 600; color: #ece9e2; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.w5 .sval.txt { font-size: 14px; line-height: 1.45; padding-top: 2px; white-space: normal; }
+.w5 .sunit { font-size: 11px; color: #8f8a82; font-weight: 600; }
+.w5 .ssub { font-size: 10.5px; color: #7b766d; line-height: 1.4; }
+.w5 .ssub.amber { color: #f0b45c; }
+
+/* 新鮮度戳（規格書 §1：絕不讓凍結的數字看起來像即時；格式＝家族 DNA #4） */
+.w5 .fresh { font-size: 10px; color: #7b766d; text-align: right; line-height: 1.3; }
+.w5 .fresh.stale { color: #f0b45c; }
+
+/* ---- hover 控制列（互動 chrome，不屬於儀表本體；淡入 0.12s 不算狀態動畫）
+   放在儀表上方 22px 的透明簷廊裡——絕不壓到數值（主人 M3 驗收指正）。 ---- */
+.w5-gutter {
+  height: 22px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 2px;
+  padding-right: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.w5-root:hover .w5-gutter { opacity: 1; }
+.w5-gutter button {
+  all: unset;
+  -webkit-app-region: no-drag;
+  width: 20px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #918d85;
+  background: rgba(20, 22, 26, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.w5-gutter button:hover { color: #ece9e2; background: rgba(40, 43, 48, 0.95); }
+
+/* 錯誤／載入等非常態畫面沿用面板底 */
+.w5 .plain { display: flex; flex: 1; align-items: center; justify-content: center; gap: 8px; font-size: 11.5px; color: #a29d93; padding: 0 12px; text-align: center; }
+
+/* ==========================================================================
+   v1.4 · 有回應的畫面（D77）——懸浮窗只收兩個效果，兩個都很便宜。
+   D34 的「零動畫」講的是儀表本體不得自己動；這裡加的是「值變了」與
+   「你按了」的回應，靜止時仍然完全不動。
+   ========================================================================== */
+
+/* ---- E26 針軌填色滑動到新位置（CSS transition 天生只在值變時動；
+        元素第一次繪製不會 transition，所以也不會有入場動畫） ---- */
+.w5 .fill { transition: width 0.6s cubic-bezier(0.22, 0.9, 0.3, 1), background 0.3s; }
+
+/* ---- E27 立即刷新鈕：完成打勾 1.2s（只有手動按的那次）。
+        gutter 是互動 chrome、不屬於儀表本體，所以這抹綠不算狀態色。 ---- */
+.w5-gutter button.ok {
+  color: #7fd1a6;
+  border-color: rgba(127, 209, 166, 0.45);
+  background: rgba(22, 38, 31, 0.95);
+}
+.w5-gutter button.ok:hover { color: #7fd1a6; background: rgba(28, 48, 39, 0.98); }
+
+@media (prefers-reduced-motion: reduce) {
+  .w5 *, .w5 *::before, .w5 *::after,
+  .w5-gutter, .w5-gutter button {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+  }
+}
