@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-claude-50: #fdf8f3;
+  --color-claude-100: #f9ecd9;
+  --color-claude-200: #f3d4ad;
+  --color-claude-300: #ecb478;
+  --color-claude-400: #e69248;
+  --color-claude-500: #d87729;
+  --color-claude-600: #c25e1e;
+  --color-claude-700: #9d4719;
+  --color-claude-800: #7c3a1a;
+  --color-claude-900: #5f2e17;
+
+  --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(120, 120, 120, 0.4); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 120, 0.6); }
+}
+
+@utility no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@utility drag {
+  -webkit-app-region: drag;
+}
