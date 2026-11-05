@@ -1,0 +1,25 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for widget, settings, and statistics windows",
+  "windows": ["widget", "settings", "statistics"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-set-position",
+    "core:window:allow-set-size",
+    "core:window:allow-set-min-size",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-decorations",
+    "core:window:allow-minimize",
+    "core:webview:allow-create-webview-window",
+    "core:event:default",
+    "opener:default",
+    "store:default",
+    "autostart:default",
+    "notification:default"
+  ]
+}
