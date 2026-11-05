@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Claude Usage Monitor 門鈴",
+  "version": "1.8.2",
+  "description": "你在這個瀏覽器對 claude.ai 送出訊息時，按一下本機 Claude Usage Monitor 的門鈴，讓它立刻查一次額度。只看「有沒有送出請求」，不讀內容、不碰 claude.ai。",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["webRequest", "storage"],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Claude Usage Monitor 門鈴",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    }
+  }
+}
