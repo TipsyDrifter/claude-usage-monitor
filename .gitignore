@@ -1,0 +1,14 @@
+node_modules
+build
+dist
+dist-ssr
+*.local
+*.log
+src-tauri/target
+src-tauri/gen
+prototypes/fixtures
+prototypes/replay
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
